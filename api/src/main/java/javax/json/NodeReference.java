@@ -187,22 +187,22 @@ abstract class NodeReference {
 
         private final JsonObject object;
         private final String key;
-        
+
         ObjectReference(JsonObject object, String key) {
             this.object = object;
             this.key = key;
         }
-        
+
         @Override
         public JsonValue get() {
             return object.get(key);
         }       
-                
+
         @Override
         public JsonObject add(JsonValue value) {
             return Json.createObjectBuilder(object).add(key, value).build();
         }
-    
+
         @Override 
         public JsonObject remove() {
             if (! object.containsKey(key)) {
@@ -210,7 +210,7 @@ abstract class NodeReference {
             }
             return Json.createObjectBuilder(object).remove(key).build();
         }   
-    
+
         @Override
         public JsonObject replace(JsonValue value) {
             if (! object.containsKey(key)) {
@@ -229,12 +229,12 @@ abstract class NodeReference {
             this.array = array;
             this.index = index;
         }
-    
+
         @Override
         public JsonValue get() {
             return array.get(index);
         }
-    
+
         @Override 
         public JsonArray add(JsonValue value) {
             // The spec seems to say index = array.size() is allowed. This is handled as append
@@ -246,10 +246,10 @@ abstract class NodeReference {
             }
             return builder.build();
         }       
-        
+
         @Override
         public JsonArray remove() {
-            if (index >= array.size()) {
+            if (index >= array.size() || index < 0) {
                 throw new JsonException("Cannot remove an array item with an out of range index: " + index);
             }
             JsonArrayBuilder builder = Json.createArrayBuilder(this.array);
@@ -258,7 +258,7 @@ abstract class NodeReference {
 
         @Override
         public JsonArray replace(JsonValue value) {
-            if (index >= array.size()) {
+            if (index >= array.size() || index < 0) {
                 throw new JsonException("Cannot replace an array item with an out of range index: " + index);
             }
             JsonArrayBuilder builder = Json.createArrayBuilder(this.array);

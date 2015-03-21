@@ -107,8 +107,20 @@ public final class JsonPointer {
      * reference tokens as this one, false otherwise.
      */
     @Override
-    public boolean equals(Object object) {
-        return false;
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        JsonPointer other = (JsonPointer) obj;
+        if (jsonPointer == null) {
+            if (other.jsonPointer != null)
+                return false;
+        } else if (!jsonPointer.equals(other.jsonPointer))
+            return false;
+        return true;
     }
 
     /**
@@ -119,7 +131,11 @@ public final class JsonPointer {
      */
     @Override
     public int hashCode() {
-        return -1;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((jsonPointer == null) ? 0 : jsonPointer.hashCode());
+        return result;
     }
 
     /**
@@ -128,19 +144,50 @@ public final class JsonPointer {
      * @param target the target referenced by this {@code JsonPointer}
      * @return the referenced value in the target.
      * @throws NullPointerException if {@code target} is null
-     * @throws JsonException if the referenced value does not exist
+     * @throws JsonException if the referenced value does not exist 
+     *     or if {@code target} is not an instance of {@code JsonStructure}.
      */
     public JsonValue getValue(JsonValue target) {
-        // TODO: handle JsonValue that is not a JsonStructure
-        NodeReference[] refs = getReferences((JsonStructure)target);
-        return refs[0].get();
+        if(target instanceof JsonStructure) {
+            NodeReference[] refs = getReferences((JsonStructure)target);
+            JsonValue value = refs[0].get();
+            //value does not exists
+            if(value != null) {
+                return value;
+            } else {
+                throw new JsonException("The JSON object " + target + " contains no mapping "
+                        + " for pointer " + jsonPointer);
+            }
+        } else {
+            throw new JsonException("Target element must be an instance of JsonStructure.");
+        }
     }
 
     /**
-     * TODO
+     * Add or replace a value at the referenced location in the specified
+     * {@code target} with the specified {@code value}.
+     * <ol>
+     * <li>If the reference is the target (empty JSON Pointer string),
+     * the specified {@code value}, which must be a {@code JsonObject},
+     * is returned.</li>
+     * <li>Else the reference is a name/value pair of a {@code JsonObject}.
+     * If the referenced value exists, it is replaced by the specified value.
+     * If it does not exist, a new name/value pair is added to the object.</li>
+     * </ol>
+     * @param target the target referenced by this {@code JsonPointer}
+     * @param value the value to be added
+     * @return the transformed {@code target} after the value is added.
+     * @throws NullPointerException if {@code target} is {@code null}
+     * @throws JsonException if the reference is an object element and the
+     *     object does not exist or if {@code target} is not an instance of
+     *     {@code JsonStructure}.
      */
     public JsonValue add(JsonValue target, JsonValue value) {
-        return null;
+        if(target instanceof JsonStructure) {
+            return add((JsonStructure) target, value);
+        } else {
+            throw new JsonException("Target element must be an instance of JsonStructure.");
+        }
     }
 
     /**
